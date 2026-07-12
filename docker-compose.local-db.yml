@@ -1,0 +1,23 @@
+# Local Postgres + Valkey (default dev). Use with --profile local-db
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local-db.yml --profile local-db up
+
+services:
+  api:
+    env_file: !override
+      - common.env
+      - common.env.boto
+      - backend.env
+    depends_on: !override
+      - db
+      - cache
+      - jaeger
+
+  worker:
+    env_file: !override
+      - common.env
+      - common.env.boto
+      - backend.env
+    depends_on: !override
+      - cache
+      - mailpit

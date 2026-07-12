@@ -1,0 +1,35 @@
+# Use shared QA Postgres + Redis (fortronx-qa-shared) instead of local db/cache.
+#
+#   ./scripts/shared-qa-tunnel.sh start
+#   docker compose -f docker-compose.yml -f docker-compose.shared-qa.yml up api worker dashboard mailpit
+#
+# Or: make up-shared
+
+services:
+  api:
+    depends_on: !override
+      - jaeger
+    env_file: !override
+      - common.env
+      - common.env.boto
+      - backend.env.shared-qa
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  worker:
+    depends_on: !override
+      - mailpit
+    env_file: !override
+      - common.env
+      - common.env.boto
+      - backend.env.shared-qa
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  db:
+    profiles:
+      - local-db
+
+  cache:
+    profiles:
+      - local-db

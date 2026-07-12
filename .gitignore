@@ -1,1 +1,7 @@
 .idea
+
+# Local secrets (Neon / Upstash / shared QA) — never commit
+backend.env.neon-upstash
+backend.env.shared-qa
+.shared-qa-tunnel.pid
+config/gcp-config.env

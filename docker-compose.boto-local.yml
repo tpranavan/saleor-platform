@@ -1,0 +1,76 @@
+# BOTO local dev overrides — keeps upstream docker-compose.yml clean.
+# Use: make up-local
+
+services:
+  api:
+    build:
+      context: ../saleor
+      dockerfile: Dockerfile
+    image: saleor-local:3.23
+    # !override: base compose depends on db/cache; without reset, profiled-out
+    # services make `up-neon` / `up-shared` fail with "undefined service".
+    depends_on: !override
+      - jaeger
+    volumes:
+      - ../saleor:/app
+      - saleor-media:/app/media
+    env_file:
+      - common.env
+      - common.env.boto
+      - backend.env
+    environment:
+      - DEBUG=True
+    command:
+      [
+        "uvicorn",
+        "saleor.asgi:application",
+        "--host=0.0.0.0",
+        "--port=8000",
+        "--reload",
+        "--lifespan=auto",
+        "--ws=none",
+        "--no-server-header",
+        "--no-access-log",
+        "--timeout-keep-alive=35",
+        "--timeout-graceful-shutdown=30",
+      ]
+
+  dashboard:
+    build:
+      context: ../saleor-dashboard
+      dockerfile: Dockerfile
+      args:
+        API_URL: http://localhost:8000/graphql/
+        APP_MOUNT_URI: /dashboard/
+        STATIC_URL: /dashboard/
+        EXTENSIONS_API_URL: ""
+    image: saleor-dashboard-local:3.23
+    environment:
+      - API_URL=http://localhost:8000/graphql/
+      - APP_MOUNT_URI=/dashboard/
+      - EXTENSIONS_API_URL=
+
+  db:
+    profiles:
+      - local-db
+
+  cache:
+    profiles:
+      - local-db
+
+  worker:
+    build:
+      context: ../saleor
+      dockerfile: Dockerfile
+    image: saleor-local:3.23
+    env_file:
+      - common.env
+      - common.env.boto
+      - backend.env
+    environment:
+      - DEBUG=True
+    depends_on: !override
+      - mailpit
+    volumes:
+      - ../saleor:/app
+      - saleor-media:/app/media

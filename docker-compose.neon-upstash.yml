@@ -1,0 +1,33 @@
+# Neon Postgres + Upstash Redis (no local Docker db/cache).
+#
+#   make up-neon
+#   # or:
+#   docker compose -f docker-compose.yml -f docker-compose.boto-local.yml \
+#     -f docker-compose.neon-upstash.yml up -d api worker dashboard mailpit jaeger
+#
+# Requires: backend.env.neon-upstash (see backend.env.neon-upstash.example)
+
+services:
+  api:
+    depends_on: !override
+      - jaeger
+    env_file: !override
+      - common.env
+      - common.env.boto
+      - backend.env.neon-upstash
+
+  worker:
+    depends_on: !override
+      - mailpit
+    env_file: !override
+      - common.env
+      - common.env.boto
+      - backend.env.neon-upstash
+
+  db:
+    profiles:
+      - local-db
+
+  cache:
+    profiles:
+      - local-db
